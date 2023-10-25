@@ -51,30 +51,29 @@ class TreeNode:
     
 #construir es uns funcion recursiva que va creando el arbol y retorna las coordenadas de la matriz con menor costo
 def construir(matriz, nodo, meta):
-    # if nodo is None:
-    #     return
+    if nodo == None:
+        return "nodo vacio"
+    
+    if not coordenada_en_matriz(matriz, meta[0], meta[1]):
+        return "la meta no existe dentro de la matriz"
+    
+    if matriz[meta[0]][meta[1]] == 0:
+        return "nunca llegaras a la meta porque no puedes atravezar la pared"
     
     if nodo.is_goal(meta):
         _, coordenadas = nodo.get_recorrido() #si llegamos a la meta retorno las coordenadas para recorrer la matriz
         return coordenadas
-    
-    # if nodo.raiz:
-    #     nodos_creados.append(nodo) #para que se agregue una vez
-        
+       
     #si no es meta expando el nodo
     nodo.hijos = expandir(matriz, nodo)
-    if not nodo.i_have_childrens(): #si no tengo hijos es porque ya no hay recorrido entonces cambio de nodo
-        nodos_ordenados = organizar_nodos_desde_nodo(raiz)
-        mi_recorrido, _ = nodo.get_recorrido()
-        nodo_siguiente = get_best_node(mi_recorrido, nodos_ordenados)
-        return construir(matriz, nodo_siguiente[0], meta)
-    
-    # for hijo in nodo.hijos:
-    #     nodos_creados.append(hijo)
-        
     nodos_ordenados = organizar_nodos_desde_nodo(raiz)
     mi_recorrido, _ = nodo.get_recorrido()
     nodo_siguiente = get_best_node(mi_recorrido, nodos_ordenados)
+    
+    if not nodo.i_have_childrens(): #si no tengo hijos es porque ya no hay recorrido entonces cambio de nodo
+        if not nodo_siguiente:
+            return "es imposible llegar a la meta"
+        return construir(matriz, nodo_siguiente[0], meta)
     
     if nodo.mi_hijo_es_el_mejor(nodo_siguiente[0]):
         # revisar esta parte para mandar directamente el hijo
@@ -121,6 +120,16 @@ def get_best_node(mi_recorrido, nodos_creados_ordenados):
                    for valor in nodos_creados_ordenados
                    if valor not in mi_recorrido and not valor.completo]
     return nueva_lista
+
+
+def coordenada_en_matriz(matriz, fila, columna):
+    num_filas = len(matriz)
+    num_columnas = len(matriz[0])  # Suponiendo que todas las filas tienen la misma longitud
+
+    if 0 <= fila < num_filas and 0 <= columna < num_columnas:
+        return True
+    else:
+        return False
     
 #retorna los hijos de un nodo
 def expandir(matriz, padre):
@@ -166,8 +175,9 @@ matriz = [
 ]
 
 raiz = TreeNode(0, [2,7], None)
-raiz.raiz = True
+raiz = None
+# raiz.raiz = True
 
-lista = construir(matriz, raiz, [2,0])
-print(lista)
+dato = construir(matriz, raiz, [2,0])
+print(dato)
 
