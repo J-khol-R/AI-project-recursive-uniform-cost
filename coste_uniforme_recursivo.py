@@ -41,9 +41,8 @@ class TreeNode:
     #pregunta si mi hijo es el menor para ver si seguir por ahi o cambiar de nodo
     def mi_hijo_es_el_mejor(self, nodo):
         for hijo in self.hijos:
-            if nodo.position == hijo.position:
+            if nodo == hijo:
                 return True
-            break
         return False
     
     def indice_en_padre(self):
@@ -63,7 +62,8 @@ def construir(matriz, nodo, meta):
     
     if matriz[meta[0]][meta[1]] == 0:
         return "nunca llegaras a la meta porque no puedes atravezar la pared"
-    
+    nodo_actual = nodo.position
+    # print(nodo_actual)
     if nodo.is_goal(meta):
         _, coordenadas = nodo.get_recorrido() #si llegamos a la meta retorno las coordenadas para recorrer la matriz
         return nodo.cost, coordenadas
@@ -119,10 +119,16 @@ def acomodar_arbol(nodo):
     # else: i = nodo.nodoPadre.hijos.index(nodo)
     # print(nodo.nodoPadre.hijos)
     i = nodo.indice_en_padre()
-    # print(i) 
+    if i == None:
+        return
+    # print(nodo.nodoPadre.matriz)
+    # print(nodo.position)
+    # print(nodo.nodoPadre)
     nodo.nodoPadre.hijos[i] = nodo.hijos[indice_mejor_hijo]
     nodo.hijos[indice_mejor_hijo].cambiado = True
+    # nodo.hijos[indice_mejor_hijo].nodoPadre.cambiado = True
     nodo.hijos[indice_mejor_hijo].posicion_anterior_de_mi_padre = i
+    
     
 def revertir(nodo):
     i = nodo.posicion_anterior_de_mi_padre
@@ -200,18 +206,21 @@ def expandir(matriz, padre):
                             [i-1,j], #posicion en la matriz
                             padre) # nodo padre
             children.append(nodo)
+    # print("arriba", nodo.position)
     if j+1 < len(matriz[0]):
         if matriz[i][j+1] != 0:
             nodo = TreeNode(matriz[i][j+1] + costo_acumulado,
                             [i,j+1],
                             padre)
             children.append(nodo)
+    # print("der", nodo.position)
     if i+1 < len(matriz):
         if matriz[i+1][j] != 0:
             nodo = TreeNode(matriz[i+1][j] + costo_acumulado,
                             [i+1,j],
                             padre)
             children.append(nodo)
+    # print("aba", nodo.position)
     if j-1 >= 0:
         if matriz[i][j-1] != 0:
             nodo = TreeNode(matriz[i][j-1] + costo_acumulado,
@@ -239,11 +248,24 @@ matriz1 = [
         [1, 0,  1, 0,  1, 1, 0, 1],
 ]
 
+matriz2 = [[0, 1, 1, 0, 1, -2, 1, 1],
+        [1, 1, 3, 1, 1, 1, 0, 0],
+        [1, 0, 1, 1, 1, 1, -2, 1],
+        [0, 1, 0, 0, -2, 1, 1, 1],
+        [3, 1, 0, 1, 0, 1, 1, 0],
+    ]
+
 raiz = TreeNode(0, [2,7], None)
 raiz.raiz = True
 
-dato = construir(matriz1, raiz, [3,0])
+dato = construir(matriz2, raiz, [2,0])
 print(dato)
 
 # print(8 < 8)
+
+[[1, 0, 0, 1, 1, 0, 1, 1],
+ [1, 1, 1, 1, 0, 1, 3, 1], 
+ [0, 0, -2, 0, 0, 0, 0, 0],
+ [1, 1, 1, 1, 0, 1, 1, 0], 
+ [1, 0, 1, 0, 0, 0, 0, 1]]  
 
