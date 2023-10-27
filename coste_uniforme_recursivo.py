@@ -1,5 +1,3 @@
-import copy
-
 class TreeNode:
     def __init__(self, cost, position, padre):
         self.cost = cost
@@ -21,11 +19,11 @@ class TreeNode:
     #verificamos si al expandir tengo hijos, si no tengo hijos ya estoy completo
     def i_have_childrens(self):
         if not self.hijos:
-            # self.completo = True
+            self.completo = True
             return False
         return True
     
-    #obtienen los nodos y coordenadas de donde pasó
+    #obtienen los nodos y coordenadas de mi ruta hasta la raiz
     def get_recorrido(self):
         if self is None:
             return nodos_recorridos, coordenadas
@@ -45,6 +43,7 @@ class TreeNode:
                 return True
         return False
     
+    #me retorna el numero de hijo que soy de mi padre
     def indice_en_padre(self):
         if self.nodoPadre is not None:
             for i, hijo in enumerate(self.nodoPadre.hijos):
@@ -52,55 +51,59 @@ class TreeNode:
                     return i
         return None
     
-# construir es uns funcion recursiva que va creando el arbol y retorna las coordenadas de la matriz con menor costo
+# construir es uns funcion recursiva que va creando el arbol y retorna las 
+# coordenadas de la matriz con menor costo
 def construir(matriz, nodo, meta):
     if nodo == None:
-        return "nodo vacio"
+        return "Nodo vacio"
     
     if not coordenada_en_matriz(matriz, meta[0], meta[1]):
-        return "la meta no existe dentro de la matriz"
+        return "La meta no existe dentro de la matriz"
     
     if matriz[meta[0]][meta[1]] == 0:
-        return "nunca llegaras a la meta porque no puedes atravezar la pared"
-    nodo_actual = nodo.position
-    # print(nodo_actual)
+        return "Nunca llegaras a la meta porque no puedes atravezar la pared"
+
     if nodo.is_goal(meta):
-        _, coordenadas = nodo.get_recorrido() #si llegamos a la meta retorno las coordenadas para recorrer la matriz
+        #si llegamos a la meta retorno las coordenadas para recorrer la matriz
+        _, coordenadas = nodo.get_recorrido()
         return nodo.cost, coordenadas
     
     #si no es meta expando el nodo
-    # copia_matriz = copy.copy(matriz)
-    # nodo.matriz = copia_matriz
     _, coordenadas = nodo.get_recorrido()
     nodo.matriz = poner_en_cero_matriz(matriz, coordenadas)
     nodo.hijos = expandir(nodo.matriz, nodo)
     
+    #obtengo la informacion del nodo siguiente (el de menor costo)
     nodos_ordenados = organizar_nodos_desde_nodo(raiz)
     mi_recorrido, _ = nodo.get_recorrido()
     nodo_siguiente = get_best_node(mi_recorrido, nodos_ordenados)
     
-    if not nodo.i_have_childrens(): #si no tengo hijos es porque ya no hay recorrido entonces cambio de nodo
-        nodo.completo = True
+    #si no tengo hijos es porque ya no hay recorrido entonces cambio de nodo
+    if not nodo.i_have_childrens(): 
         if not nodo_siguiente:
-            return "es imposible llegar a la meta"
+            return "Es imposible llegar a la meta"
         return construir(matriz, nodo_siguiente[0], meta)
     
+    #verifico si mi hijo es el mejor para asi no hacer cambios al arbol
     if nodo.mi_hijo_es_el_mejor(nodo_siguiente[0]):
-        # revisar esta parte para mandar directamente el hijo
         nodo.completo = True
         if nodo_siguiente[0].cambiado:
             revertir(nodo_siguiente[0])
         return construir(matriz, nodo_siguiente[0], meta)
     
-    acomodar_arbol(nodo) #cambia la posicion del padre por su mejor hijo
+    #cambia la posicion del padre por su mejor hijo
+    acomodar_arbol(nodo) 
     
+    #si el nodo siguiente fue un nodo cambiado (osea reemplaze al 
+    # padre por su mejor hijo) lo revierto
     if nodo_siguiente[0].cambiado:
         revertir(nodo_siguiente[0])
         
     return construir(matriz, nodo_siguiente[0], meta)
 
+#cada nodo guarda su matriz para saber por donde no devolverse, 
+# en este caso donde haya un cero
 def poner_en_cero_matriz(matriz, coordenadas_a_cero):
-    # Crear una copia de la matriz original
     nueva_matriz = [fila[:] for fila in matriz]
 
     for fila, columna in coordenadas_a_cero:
@@ -109,62 +112,29 @@ def poner_en_cero_matriz(matriz, coordenadas_a_cero):
 
     return nueva_matriz
 
-
-    
+#cambio el padre por su mejor hijo
 def acomodar_arbol(nodo):
-    mejor_hijo = min(nodo.hijos, key=lambda hijo: hijo.cost) #0,7
-    indice_mejor_hijo = nodo.hijos.index(mejor_hijo) #0
-    # if nodo.cambiado:
-    #     i = nodo.nodoPadre.hijos.index(nodo)
-    # else: i = nodo.nodoPadre.hijos.index(nodo)
-    # print(nodo.nodoPadre.hijos)
     i = nodo.indice_en_padre()
     if i == None:
         return
-    # print(nodo.nodoPadre.matriz)
-    # print(nodo.position)
-    # print(nodo.nodoPadre)
+    
+    mejor_hijo = min(nodo.hijos, key=lambda hijo: hijo.cost) 
+    indice_mejor_hijo = nodo.hijos.index(mejor_hijo)
+
     nodo.nodoPadre.hijos[i] = nodo.hijos[indice_mejor_hijo]
     nodo.hijos[indice_mejor_hijo].cambiado = True
-    # nodo.hijos[indice_mejor_hijo].nodoPadre.cambiado = True
     nodo.hijos[indice_mejor_hijo].posicion_anterior_de_mi_padre = i
     
-    
+#si ahora un nodo cambiado es el mejor lo revierto para continuar
 def revertir(nodo):
     i = nodo.posicion_anterior_de_mi_padre
     nodo.nodoPadre.nodoPadre.hijos[i] = nodo.nodoPadre
-    nodo.nodoPadre.completo = True
-    
-    
-def recorrer_arbol_por_filas(arbol):
-    if not arbol:
-        return []
-
-    # Usamos una lista como cola para recorrer por niveles
-    fila_actual = [arbol]
-    nodos = []
-
-    while fila_actual:
-        fila_siguiente = []
-
-        for nodo in fila_actual:
-            nodos.append(nodo)
-            fila_siguiente.extend(nodo.hijos)
-
-        fila_actual = fila_siguiente
-    
-    def orden_personalizado(nodo):
-        return (nodo.cost, nodos.index(nodo))
-    
-    nodos_ordenados = sorted(nodos, key=orden_personalizado)
-
-    return nodos_ordenados    
-   
+    nodo.nodoPadre.completo = True   
    
 
-
+# Realiza un recorrido DFS para recoger todos los nodos en una lista 
+# y despues los acomoda por menor costo
 def organizar_nodos_desde_nodo(nodo):
-    # Realiza un recorrido DFS para recoger todos los nodos en una lista
     def recorrido_dfs(nodo, nodos):
         if nodo is None:
             return
@@ -177,17 +147,18 @@ def organizar_nodos_desde_nodo(nodo):
     nodos.sort(key=lambda nodo: nodo.cost)  # Organiza la lista de nodos de menor a mayor
     return nodos   
 
-#retorna una lista con los valores de nodos_creados_ordenados sin los valores de mi_recorrido, ademas elimina los nodos que esten completos
+#retorna una lista con los valores de nodos_creados_ordenados 
+# sin los valores de mi_recorrido, ademas elimina los nodos que esten completos
 def get_best_node(mi_recorrido, nodos_creados_ordenados):
     nueva_lista = [valor 
                    for valor in nodos_creados_ordenados
                    if valor not in mi_recorrido and not valor.completo]
     return nueva_lista
 
-
+#verifica que la meta se encuentre dentro d ela matriz
 def coordenada_en_matriz(matriz, fila, columna):
     num_filas = len(matriz)
-    num_columnas = len(matriz[0])  # Suponiendo que todas las filas tienen la misma longitud
+    num_columnas = len(matriz[0])  
 
     if 0 <= fila < num_filas and 0 <= columna < num_columnas:
         return True
@@ -206,21 +177,18 @@ def expandir(matriz, padre):
                             [i-1,j], #posicion en la matriz
                             padre) # nodo padre
             children.append(nodo)
-    # print("arriba", nodo.position)
     if j+1 < len(matriz[0]):
         if matriz[i][j+1] != 0:
             nodo = TreeNode(matriz[i][j+1] + costo_acumulado,
                             [i,j+1],
                             padre)
             children.append(nodo)
-    # print("der", nodo.position)
     if i+1 < len(matriz):
         if matriz[i+1][j] != 0:
             nodo = TreeNode(matriz[i+1][j] + costo_acumulado,
                             [i+1,j],
                             padre)
             children.append(nodo)
-    # print("aba", nodo.position)
     if j-1 >= 0:
         if matriz[i][j-1] != 0:
             nodo = TreeNode(matriz[i][j-1] + costo_acumulado,
@@ -255,17 +223,16 @@ matriz2 = [[0, 1, 1, 0, 1, -2, 1, 1],
         [3, 1, 0, 1, 0, 1, 1, 0],
     ]
 
-raiz = TreeNode(0, [2,7], None)
+matriz3 = [[3, 1, -2, 0,  1, 0, 0,  1],
+           [1, 1,  1, 0,  1, 1, 3, -2],
+           [1, 1,  0, 0, -2, 1, 1,  1],
+           [0, 1,  0, 1,  1, 1, 1,  1],
+           [1, 0,  1, 1,  1, 0, 0,  1],
+        ]
+
+raiz = TreeNode(0, [3,6], None)
 raiz.raiz = True
 
-dato = construir(matriz2, raiz, [2,0])
+dato = construir(matriz3, raiz, [3,1])
 print(dato)
-
-# print(8 < 8)
-
-[[1, 0, 0, 1, 1, 0, 1, 1],
- [1, 1, 1, 1, 0, 1, 3, 1], 
- [0, 0, -2, 0, 0, 0, 0, 0],
- [1, 1, 1, 1, 0, 1, 1, 0], 
- [1, 0, 1, 0, 0, 0, 0, 1]]  
 
