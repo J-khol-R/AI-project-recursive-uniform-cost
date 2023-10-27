@@ -53,7 +53,7 @@ class TreeNode:
                     return i
         return None
     
-#construir es uns funcion recursiva que va creando el arbol y retorna las coordenadas de la matriz con menor costo
+# construir es uns funcion recursiva que va creando el arbol y retorna las coordenadas de la matriz con menor costo
 def construir(matriz, nodo, meta):
     if nodo == None:
         return "nodo vacio"
